@@ -1,0 +1,19 @@
+Integrantes:
+
+Agus Buss
+Facundo Neveu
+Exequiel Bustos
+
+StabySpoon:
+
+1. Introducción
+Objetivo del proyecto: Diseñar, desarrollar y construir un prototipo funcional de una cuchara estabilizadora inteligente (StabySpoon) que compense los temblores involuntarios en la mano del usuario, permitiéndole alimentarse de manera independiente.
+Alcance del proyecto: El proyecto abarca desde el diseño del hardware (circuito electrónico y modelado 3D del mango) y el desarrollo del software (lógica de estabilización), hasta las pruebas de integración y validación del prototipo. No incluye la fabricación en masa ni la comercialización a nivel nacional.
+Justificación y antecedentes: Las personas que padecen afecciones motoras (como Parkinson o temblor esencial) enfrentan grandes dificultades para realizar tareas cotidianas básicas como alimentarse, lo que afecta su autonomía y calidad de vida. StabySpoon busca ofrecer una alternativa tecnológica, accesible y de bajo costo en comparación con las opciones importadas del mercado.
+Metodología de trabajo: Se utilizará un enfoque iterativo e incremental para permitir la construcción y prueba progresiva de los componentes físicos y lógicos. Adicionalmente, siguiendo la directiva de la cátedra, se integrará el uso de una IA interna como herramienta de asistencia; el enfoque consiste en hacer un uso correcto y práctico de esta tecnología para facilitar y optimizar la programación de los actuadores y definir con precisión sus direcciones de movimiento.
+
+2. Descripción General del Proyecto (Marco teórico)
+Contexto y problemática: La pérdida de motricidad fina y los temblores involuntarios generan dependencia. Las soluciones actuales en el mercado suelen ser prohibitivas económicamente.
+Requerimientos del negocio: Crear un producto viable, ergonómico y cuyo costo de producción (lista de materiales) se mantenga por debajo de los estándares del mercado internacional, facilitando su futura producción local.
+Solución propuesta: Un dispositivo portátil que integra sensores inerciales que detectan el movimiento de la mano y envían señales a micro motores que contrarrestan dicho movimiento en tiempo real, manteniendo el cabezal de la cuchara nivelado.
+Actores involucrados: Equipo de desarrollo, docentes/evaluadores, usuarios finales (personas con dificultades motrices) y posibles proveedores de componentes electrónicos.
