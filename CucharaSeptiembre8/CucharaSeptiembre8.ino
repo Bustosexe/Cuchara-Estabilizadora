@@ -1,5 +1,8 @@
+//TAREA --> Eliminar Delay (by Profe)
+
 #include <Wire.h>
 #include <MPU6050.h>
+
 #include <Servo.h>
 
 MPU6050 mpu;
@@ -49,4 +52,3 @@ void loop() {
 
   delay(20);
 }
-
