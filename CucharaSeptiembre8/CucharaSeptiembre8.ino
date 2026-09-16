@@ -1,78 +1,80 @@
-#include "arduino_secrets.h"
+/*
+Tareas y sus responsables: (Realizar las modificaciones correspondientes cada uno con la 
+BUSS --> Despejar la función loop()
+BUSTOS --> Crear función TxSerie() que sea la única encargada de enviar datos por el puerto serie.
+NEVEU --> Crear función ReadSensors() que contenga todo lo relacionado a la lecturta de los sensores y actualice variables para utilizar en el resto del sistema.
+BUSS --> Crear función CtrlEstabilizado() que se ocupe de actualizar el valor del ángulo que debería tener el servo.
+BUSTOS --> Crear función CtrlServo() que sea la que se encargue de mover el servo según corresponda.
+NEVEU --> Incorporar LedTest()
+BUSS --> Eliminar los retardos de todo el sistema (delay)
+*/
 
 #include <Wire.h>
 #include <MPU6050.h>
 #include <Servo.h>
 
-// --- 1. Abstraerse de las funciones del hardware ---
+// --- TAREAS BUSTOS: Abstracción de hardware ---
 #define PIN_SERVO 11
-#define VELOCIDAD_SERIAL 9600
-#define INICIAR_SERIAL Serial.begin(VELOCIDAD_SERIAL)
-#define INICIAR_I2C Wire.begin()
 #define MOVER_SERVO(pos) servo.write(pos)
 #define IMPRIMIR(x) Serial.print(x)
 #define IMPRIMIR_LN(x) Serial.println(x)
 
-// ParÃ¡metros de configuracion (Reemplazan variables globales - Reglas 6 y 8)
-#define SUAVIZADO 0.9
-#define GANANCIA 1.5
-#define UMBRAL_MOVIMIENTO 1.0
-#define INTERVALO_MUESTREO 20 // Reemplaza al delay de 20ms
-
-// Instancias de hardware (Unicas globales permitidas por necesidad de la libreria)
 MPU6050 mpu;
 Servo servo;
 
+float anguloServo = 180;
+float suavizado = 0.9;
+float ganancia = 1.5;
+float umbralMovimiento = 1.0;  // Umbral mínimo para mover el servo (en grados)
+
 void setup() {
-  INICIAR_SERIAL;
-  INICIAR_I2C;
+  Serial.begin(9600);
+  Wire.begin();
   mpu.initialize();
   servo.attach(PIN_SERVO);
 
-  // --- 9. Ternario ?: y 10. Sin llaves ---
-  mpu.testConnection() ? IMPRIMIR_LN("MPU6050 conectado correctamente") : IMPRIMIR_LN("Error al conectar el MPU6050");
+  if (mpu.testConnection()) {
+    Serial.println("MPU6050 conectado correctamente");
+  } else {
+    Serial.println("Error al conectar el MPU6050");
+  }
 
-  MOVER_SERVO(180);
+  servo.write(anguloServo);
 }
 
 void loop() {
-  // --- 6 y 8. Sin variables globales (usamos static locales) ---
-  static float angleX_actual = 0;
-  static float anguloServo_actual = 180;
-  static unsigned long ultimoTiempo = 0;
-
-  // --- 3. No bloqueante y 9. Early return (Eliminamos el delay de 20ms) ---
-  if (millis() - ultimoTiempo < INTERVALO_MUESTREO) return;
-  ultimoTiempo = millis();
-
-  // --- 2. Bucle principal lo mas limpio posible ---
-  // Pasamos las variables por referencia (&) para que CtrlServo las pueda modificar
-  CtrlServo(&angleX_actual, &anguloServo_actual);
-  
-  // Pasamos los valores por copia para que TxSerie solo los lea
-  TxSerie(angleX_actual, anguloServo_actual);
-}
-
-// --- TAREA 2: Funcion encargada UNICAMENTE de calcular y mover el servo ---
-void CtrlServo(float *angleX, float *anguloServo) {
   int16_t ax, ay, az;
   mpu.getAcceleration(&ax, &ay, &az);
 
-  *angleX = atan2(ax, az) * 180.0 / PI;
-  float nuevaPos = 90 - (*angleX * GANANCIA);
+  float angleX = atan2(ax, az) * 180.0 / PI;
+  float nuevaPos = 90 - (angleX * ganancia);
   nuevaPos = constrain(nuevaPos, 0, 180);
 
   // Aplicar suavizado
-  float anguloCalculado = (SUAVIZADO * (*anguloServo)) + ((1 - SUAVIZADO) * nuevaPos);
+  float anguloCalculado = (suavizado * anguloServo) + ((1 - suavizado) * nuevaPos);
 
-  // --- 10. Sin llaves (usando el operador coma para ejecutar dos acciones en una linea) ---
-  if (abs(anguloCalculado - *anguloServo) > UMBRAL_MOVIMIENTO) *anguloServo = anguloCalculado, MOVER_SERVO(*anguloServo);
+  // --- INICIO TAREAS BUSTOS ---
+  CtrlServo(anguloCalculado);
+  TxSerie(angleX, anguloServo);
+  // --- FIN TAREAS BUSTOS ---
+
+  delay(20);
 }
 
-// --- TAREA 1: Funcion encargada UNICAMENTE de enviar datos por serie ---
-void TxSerie(float angleX, float anguloServo) {
-  IMPRIMIR("Angulo X: ");
+// ==========================================
+// FUNCIONES BUSTOS
+// ==========================================
+
+// Función encargada ÚNICAMENTE de mover el servo según corresponda
+void CtrlServo(float anguloDeseado) {
+  // Regla 10: Si el cambio es mayor al umbral, actualiza la variable global y mueve el motor (en una sola línea)
+  if (abs(anguloDeseado - anguloServo) > umbralMovimiento) anguloServo = anguloDeseado, MOVER_SERVO(anguloServo);
+}
+
+// Función encargada ÚNICAMENTE de enviar datos por el puerto serie
+void TxSerie(float angleX, float anguloAct) {
+  IMPRIMIR("Ángulo X: ");
   IMPRIMIR(angleX);
   IMPRIMIR("  Servo: ");
-  IMPRIMIR_LN(anguloServo);
+  IMPRIMIR_LN(anguloAct);
 }
