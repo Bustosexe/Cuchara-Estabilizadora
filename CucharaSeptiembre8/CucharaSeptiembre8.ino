@@ -1,5 +1,13 @@
-//TAREA --> Eliminar Delay (by Profe)
-
+/*
+Tareas y sus responsables: (Realizar las modificaciones correspondientes cada uno con la 
+BUSS --> Despejar la función loop()
+BUSTOS --> Crear función TxSerie() que sea la única encargada de enviar datos por el puerto serie.
+NEVEU --> Crear función ReadSensors() que contenga todo lo relacionado a la lecturta de los sensores y actualice variables para utilizar en el resto del sistema.
+BUSS --> Crear función CtrlEstabilizado() que se ocupe de actualizar el valor del ángulo que debería tener el servo.
+BUSTOS --> Crear función CtrlServo() que sea la que se encargue de mover el servo según corresponda.
+NEVEU --> Incorporar LedTest()
+BUSS --> Eliminar los retardos de todo el sistema (delay)
+*/
 #include <Wire.h>
 #include <MPU6050.h>
 
