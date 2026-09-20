@@ -27,6 +27,15 @@ float suavizado = 0.9;
 float ganancia = 1.5;
 float umbralMovimiento = 1.0;  // Umbral mínimo para mover el servo (en grados)
 
+// --- TAREAS BUSS: control de tiempo sin bloquear (reemplaza delay) ---
+const unsigned long INTERVALO_MS = 20;
+unsigned long tUltimaActualizacion = 0;
+
+// Variables compartidas actualizadas por CtrlEstabilizado()
+// (NEVEU: cuando esté lista ReadSensors(), ax/ay/az deberían venir de ahí)
+float anguloXActual = 0;
+float anguloCalculadoActual = 0;
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -42,7 +51,27 @@ void setup() {
   servo.write(anguloServo);
 }
 
+// --- TAREA BUSS: loop() despejado, sin delay, sin lógica de sensores/servo ---
 void loop() {
+  unsigned long ahora = millis();
+
+  if (ahora - tUltimaActualizacion >= INTERVALO_MS) {
+    tUltimaActualizacion = ahora;
+
+    CtrlEstabilizado();
+    CtrlServo(anguloCalculadoActual);
+    TxSerie(anguloXActual, anguloServo);
+  }
+}
+
+// ==========================================
+// FUNCIONES BUSS
+// ==========================================
+
+// Se ocupa ÚNICAMENTE de calcular el ángulo que debería tener el servo.
+// TODO(NEVEU): cuando exista ReadSensors(), reemplazar la lectura directa
+// del MPU acá por las variables globales que esa función actualice.
+void CtrlEstabilizado() {
   int16_t ax, ay, az;
   mpu.getAcceleration(&ax, &ay, &az);
 
@@ -53,12 +82,9 @@ void loop() {
   // Aplicar suavizado
   float anguloCalculado = (suavizado * anguloServo) + ((1 - suavizado) * nuevaPos);
 
-  // --- INICIO TAREAS BUSTOS ---
-  CtrlServo(anguloCalculado);
-  TxSerie(angleX, anguloServo);
-  // --- FIN TAREAS BUSTOS ---
-
-  delay(20);
+  // Guardamos en variables globales para que loop() se las pase a CtrlServo/TxSerie
+  anguloXActual = angleX;
+  anguloCalculadoActual = anguloCalculado;
 }
 
 // ==========================================
@@ -67,7 +93,6 @@ void loop() {
 
 // Función encargada ÚNICAMENTE de mover el servo según corresponda
 void CtrlServo(float anguloDeseado) {
-  // Regla 10: Si el cambio es mayor al umbral, actualiza la variable global y mueve el motor (en una sola línea)
   if (abs(anguloDeseado - anguloServo) > umbralMovimiento) anguloServo = anguloDeseado, MOVER_SERVO(anguloServo);
 }
 
