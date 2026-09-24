@@ -27,12 +27,27 @@ float suavizado = 0.9;
 float ganancia = 1.5;
 float umbralMovimiento = 1.0;  // Umbral mínimo para mover el servo (en grados)
 
+
+ //Variables neveu 
+int16_t ax = 0;
+int16_t ay = 0;
+int16_t az = 0;
+
+float anguloXSensor = 0;
+
+const int PIN_LED = LED_BUILTIN;
+
 // --- TAREAS BUSS: control de tiempo sin bloquear (reemplaza delay) ---
 const unsigned long INTERVALO_MS = 20;
 unsigned long tUltimaActualizacion = 0;
 
 // Variables compartidas actualizadas por CtrlEstabilizado()
 // (NEVEU: cuando esté lista ReadSensors(), ax/ay/az deberían venir de ahí)
+void ReadSensors() {
+  mpu.getAcceleration(&ax, &ay, &az);
+
+  anguloXSensor = atan2(ax, az) * 180.0 / PI;
+}
 float anguloXActual = 0;
 float anguloCalculadoActual = 0;
 
@@ -49,6 +64,7 @@ void setup() {
   }
 
   servo.write(anguloServo);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 // --- TAREA BUSS: loop() despejado, sin delay, sin lógica de sensores/servo ---
@@ -102,4 +118,15 @@ void TxSerie(float angleX, float anguloAct) {
   IMPRIMIR(angleX);
   IMPRIMIR("  Servo: ");
   IMPRIMIR_LN(anguloAct);
+}
+//Led test Neveu
+void LedTest() {
+  static bool estadoLed = false;
+  static unsigned long tiempoLed = 0;
+
+  if (millis() - tiempoLed >= 500) {
+    tiempoLed = millis();
+    estadoLed = !estadoLed;
+    digitalWrite(PIN_LED, estadoLed);
+  }
 }
