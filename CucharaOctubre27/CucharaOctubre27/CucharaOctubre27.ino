@@ -1,6 +1,7 @@
+//Device: ESP32 Dev Module
 #include <Wire.h>
 #include <MPU6050.h>
-#include <ESP32Servo.h>
+#include <ESP32Servo.h> //by Keving Harrington
 
 // ==========================================================
 //  CUCHARA ESTABILIZADORA
