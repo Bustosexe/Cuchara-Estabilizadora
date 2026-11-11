@@ -49,6 +49,8 @@ const float PITCH_LIBERA  = 55.0; // por debajo de este valor, vuelve a funciona
 const unsigned long INTERVALO_US = 10000; // ciclo de 10 ms
 unsigned long ultimoCiclo = 0;
 unsigned long ultimoSerial = 0;
+const float UMBRAL_SERIAL = 0.1;  // grados
+float ultRoll = 0, ultPitch = 0, ultS19 = 0, ultS23 = 0;
 
 float offGx = 0, offGy = 0;
 float roll = 0, pitch = 0;
@@ -198,12 +200,27 @@ void loop() {
   if (!boton && botonAntes) tararNivel();
   botonAntes = boton;
 
-  // Telemetria para el Serial Plotter (cada 50 ms)
+    // Telemetria para el Serial Plotter (solo cuando algun valor cambia)
   if (millis() - ultimoSerial >= 50) {
     ultimoSerial = millis();
-    Serial.print("Roll:");   Serial.print(roll - refRoll);
-    Serial.print(",Pitch:"); Serial.print(pitch - refPitch);
-    Serial.print(",S19:");   Serial.print(pos19 - CENTRO_19);
-    Serial.print(",S23:");   Serial.println(pos23 - CENTRO_23);
+
+    float vRoll  = roll  - refRoll;
+    float vPitch = pitch - refPitch;
+    float vS19   = pos19 - CENTRO_19;
+    float vS23   = pos23 - CENTRO_23;
+
+    if (fabs(vRoll  - ultRoll)  >= UMBRAL_SERIAL ||
+        fabs(vPitch - ultPitch) >= UMBRAL_SERIAL ||
+        fabs(vS19   - ultS19)   >= UMBRAL_SERIAL ||
+        fabs(vS23   - ultS23)   >= UMBRAL_SERIAL) {
+
+      ultRoll = vRoll;  ultPitch = vPitch;
+      ultS19  = vS19;   ultS23   = vS23;
+
+      Serial.print("Roll:");   Serial.print(vRoll);
+      Serial.print(",Pitch:"); Serial.print(vPitch);
+      Serial.print(",S19:");   Serial.print(vS19);
+      Serial.print(",S23:");   Serial.println(vS23);
+    }
   }
 }
