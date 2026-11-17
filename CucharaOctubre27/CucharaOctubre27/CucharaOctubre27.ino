@@ -63,11 +63,8 @@ void esperarMs(unsigned long ms) { delay(ms); }
 
 void mensaje(const char *texto) { Serial.println(texto); }
 
-void enviarDatos(float roll, float pitch, float sRoll, float sPitch) {
-  Serial.print("Roll:");        Serial.print(roll);
-  Serial.print(",Pitch:");      Serial.print(pitch);
-  Serial.print(",ServoRoll:");  Serial.print(sRoll);
-  Serial.print(",ServoPitch:"); Serial.println(sPitch);
+void enviarDato(const char *nombre, float valor) {
+  Serial.print(nombre); Serial.print(":"); Serial.println(valor);
 }
 
 // =====================================================
@@ -90,6 +87,7 @@ const float FACTOR_VEL = 0.5;
 
 const float PITCH_BLOQUEO = 65.0;  // con tanto pitch el roll no es confiable
 const float PITCH_LIBERA  = 55.0;
+const float UMBRAL_ENVIO = 0.1;  // cambio minimo para volver a imprimir
 
 const unsigned long CICLO_US = 10000;  // 100 Hz
 
@@ -104,6 +102,7 @@ bool movRoll = false, movPitch = false;
 
 unsigned long ultimoCiclo = 0, ultimoEnvio = 0;
 bool botonAntes = false;
+float ultimoRoll = 0, ultimoPitch = 0, ultimoServoRoll = 0, ultimoServoPitch = 0;
 
 void leerSensor(float &accRoll, float &accPitch, float &velRoll, float &velPitch, float &g) {
   float ax, ay, az, gx, gy;
@@ -183,6 +182,14 @@ void controlarServos() {
   moverSuave(SERVO_PITCH, posPitch, objPitch, movPitch);
 }
 
+// Imprime el valor solo si cambio respecto al ultimo enviado
+void enviarSiCambia(const char *nombre, float valor, float &ultimo) {
+  if (fabs(valor - ultimo) >= UMBRAL_ENVIO) {
+    ultimo = valor;
+    enviarDato(nombre, valor);
+  }
+}
+
 void setup() {
   if (iniciarHardware()) mensaje("MPU6050 OK");
   else                   mensaje("ERROR: MPU6050 no responde");
@@ -218,6 +225,9 @@ void loop() {
 
   if (tiempoMs() - ultimoEnvio >= 50) {
     ultimoEnvio = tiempoMs();
-    enviarDatos(roll - refRoll, pitch - refPitch, posRoll - CENTRO, posPitch - CENTRO);
+       enviarSiCambia("Roll",       roll - refRoll,    ultimoRoll);
+    enviarSiCambia("Pitch",      pitch - refPitch,  ultimoPitch);
+    enviarSiCambia("ServoRoll",  posRoll - CENTRO,  ultimoServoRoll);
+    enviarSiCambia("ServoPitch", posPitch - CENTRO, ultimoServoPitch);
   }
 }
